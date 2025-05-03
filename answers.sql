@@ -1,18 +1,26 @@
-Q1.
--- Achieving 1NF (First Normal Form)
--- Original table: ProductDetail
--- OrderID | CustomerName | Products
--- 101     | John Doe     | Laptop, Mouse
--- 102     | Jane Smith   | Tablet, Keyboard, Mouse
--- 103     | Emily Clark  | Phone
 
--- Create a new table ProductDetail_1NF to store the 1NF compliant data
+-- Step 1: Create the original ProductDetail table (denormalized, violates 1NF)
 CREATE TABLE ProductDetail (
     OrderID INT,
-    CustomerName VARCHAR(255),
-    Product VARCHAR(255)
+    CustomerName VARCHAR(100),
+    Products VARCHAR(255)
 );
-INSERT INTO ProductDetail (OrderID, CustomerName, Product) VALUES
+
+-- Step 2: Insert sample data
+INSERT INTO ProductDetail VALUES
+(101, 'John Doe', 'Laptop, Mouse'),
+(102, 'Jane Smith', 'Tablet, Keyboard, Mouse'),
+(103, 'Emily Clark', 'Phone');
+
+-- Step 3: Create normalized table for 1NF
+CREATE TABLE ProductDetail_1NF (
+    OrderID INT,
+    CustomerName VARCHAR(100),
+    Product VARCHAR(100)
+);
+
+-- Step 4: Insert data in 1NF format (one product per row)
+INSERT INTO ProductDetail_1NF VALUES
 (101, 'John Doe', 'Laptop'),
 (101, 'John Doe', 'Mouse'),
 (102, 'Jane Smith', 'Tablet'),
@@ -20,43 +28,35 @@ INSERT INTO ProductDetail (OrderID, CustomerName, Product) VALUES
 (102, 'Jane Smith', 'Mouse'),
 (103, 'Emily Clark', 'Phone');
 
--- Display the transformed table
-SELECT * FROM ProductDetail ;
+-- ------------------------------------------------
+-- Question 2: Achieving Second Normal Form (2NF)
+-- ------------------------------------------------
 
-
-Q2.
--- Question 2: Achieving 2NF (Second Normal Form)
--- Original table: OrderDetails
--- OrderID | CustomerName | Product  | Quantity
--- 101     | John Doe     | Laptop   | 2
--- 101     | John Doe     | Mouse    | 1
--- 102     | Jane Smith   | Tablet   | 3
--- 102     | Jane Smith   | Keyboard | 1
--- 102     | Jane Smith   | Mouse    | 2
--- 103     | Emily Clark  | Phone    | 1
-
--- Create a table for Customers to remove the partial dependency
-CREATE TABLE Customers (
+-- Step 1: Create Orders table (to remove partial dependency of CustomerName on OrderID)
+CREATE TABLE Orders (
     OrderID INT PRIMARY KEY,
-    CustomerName VARCHAR(255)
+    CustomerName VARCHAR(100)
 );
 
--- Insert customer data
-INSERT INTO Customers (OrderID, CustomerName)
-SELECT DISTINCT OrderID, CustomerName FROM OrderDetails;
-
--- Create a table for OrderProducts with OrderID and Product as primary key
+-- Step 2: Create OrderProducts table (fully depends on entire primary key)
 CREATE TABLE OrderProducts (
     OrderID INT,
-    Product VARCHAR(255),
+    Product VARCHAR(100),
     Quantity INT,
-    PRIMARY KEY (OrderID, Product)
+    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID)
 );
 
--- Insert order product data
-INSERT INTO OrderProducts (OrderID, Product, Quantity)
-SELECT OrderID, Product, Quantity FROM OrderDetails;
+-- Step 3: Insert data into Orders table
+INSERT INTO Orders VALUES
+(101, 'John Doe'),
+(102, 'Jane Smith'),
+(103, 'Emily Clark');
 
--- Display the transformed tables
-SELECT * FROM Customers;
-SELECT * FROM OrderProducts;
+-- Step 4: Insert data into OrderProducts table
+INSERT INTO OrderProducts VALUES
+(101, 'Laptop', 2),
+(101, 'Mouse', 1),
+(102, 'Tablet', 3),
+(102, 'Keyboard', 1),
+(102, 'Mouse', 2),
+(103, 'Phone', 1);
